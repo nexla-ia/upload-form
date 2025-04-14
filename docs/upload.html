@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Envio de Fotos - Evento</title>
+  <style>
+    body { font-family: sans-serif; max-width: 400px; margin: 2em auto; }
+    .hidden { display: none; }
+    #status { margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h1>Envie sua foto!</h1>
+  <p>Selecione uma foto e clique em “Enviar”.</p>
+
+  <input type="file" id="fileInput" accept="image/*" /><br/><br/>
+  <button id="uploadBtn">Enviar</button>
+
+  <div id="status" class="hidden"></div>
+
+  <script>
+    // Extrai folderId da query string
+    const params = new URLSearchParams(window.location.search);
+    const folderId = params.get('folderId');
+
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const statusDiv = document.getElementById('status');
+
+    uploadBtn.addEventListener('click', () => {
+      const file = fileInput.files[0];
+      if (!file) {
+        statusDiv.textContent = 'Por favor, selecione um arquivo.';
+        statusDiv.classList.remove('hidden');
+        return;
+      }
+      if (!folderId) {
+        statusDiv.textContent = 'Erro: folderId não encontrado na URL.';
+        statusDiv.classList.remove('hidden');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folderId', folderId);
+
+      statusDiv.textContent = 'Enviando...';
+      statusDiv.classList.remove('hidden');
+
+      fetch('https://SEU_N8N_URL/webhook/upload-convidados', {
+        method: 'POST',
+        body: formData
+      })
+      .then(r => r.json())
+      .then(json => {
+        if (json.status === 'success') {
+          statusDiv.textContent = 'Obrigado! Sua foto foi enviada com sucesso.';
+        } else {
+          statusDiv.textContent = 'Erro: ' + (json.message || 'Tente novamente.');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        statusDiv.textContent = 'Erro de comunicação. Tente novamente.';
+      });
+    });
+  </script>
+</body>
+</html>
