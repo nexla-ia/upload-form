@@ -5,19 +5,88 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Envio de Fotos - Evento</title>
   <style>
-    body { font-family: sans-serif; max-width: 400px; margin: 2em auto; }
-    .hidden { display: none; }
-    #status { margin-top: 1em; }
+    /* Reset simples */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    p {
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    input[type="file"] {
+      display: block;
+      margin: 0 auto 1.5rem;
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      padding: 0.75rem;
+      background: #3498db;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background: #2980b9;
+    }
+
+    #status {
+      margin-top: 1rem;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    #status.error {
+      color: #e74c3c;
+    }
+
+    #status.success {
+      color: #27ae60;
+    }
   </style>
 </head>
 <body>
-  <h1>Envie sua foto!</h1>
-  <p>Selecione uma foto e clique em “Enviar”.</p>
+  <div class="container">
+    <h1>Envie sua foto!</h1>
+    <p>Selecione uma foto e clique em “Enviar”.</p>
 
-  <input type="file" id="fileInput" accept="image/*" /><br/><br/>
-  <button id="uploadBtn">Enviar</button>
+    <input type="file" id="fileInput" accept="image/*" />
+    <button id="uploadBtn">Enviar</button>
 
-  <div id="status" class="hidden"></div>
+    <div id="status"></div>
+  </div>
 
   <script>
     // Extrai folderId da query string
@@ -29,15 +98,18 @@
     const statusDiv = document.getElementById('status');
 
     uploadBtn.addEventListener('click', () => {
+      statusDiv.textContent = '';
+      statusDiv.className = '';
+
       const file = fileInput.files[0];
       if (!file) {
         statusDiv.textContent = 'Por favor, selecione um arquivo.';
-        statusDiv.classList.remove('hidden');
+        statusDiv.classList.add('error');
         return;
       }
       if (!folderId) {
         statusDiv.textContent = 'Erro: folderId não encontrado na URL.';
-        statusDiv.classList.remove('hidden');
+        statusDiv.classList.add('error');
         return;
       }
 
@@ -46,23 +118,25 @@
       formData.append('folderId', folderId);
 
       statusDiv.textContent = 'Enviando...';
-      statusDiv.classList.remove('hidden');
 
-      fetch('https://SEU_N8N_URL/webhook/upload-convidados', {
+      fetch('https://n8n.nexladesenvolvimento.com.br/webhook-test/upload-convidados', {
         method: 'POST',
         body: formData
       })
       .then(r => r.json())
       .then(json => {
         if (json.status === 'success') {
-          statusDiv.textContent = 'Obrigado! Sua foto foi enviada com sucesso.';
+          statusDiv.textContent = '✔️ Sua foto foi enviada com sucesso!';
+          statusDiv.classList.add('success');
         } else {
-          statusDiv.textContent = 'Erro: ' + (json.message || 'Tente novamente.');
+          statusDiv.textContent = '❌ Erro: ' + (json.message || 'Tente novamente.');
+          statusDiv.classList.add('error');
         }
       })
       .catch(err => {
         console.error(err);
-        statusDiv.textContent = 'Erro de comunicação. Tente novamente.';
+        statusDiv.textContent = '❌ Erro de comunicação. Tente novamente.';
+        statusDiv.classList.add('error');
       });
     });
   </script>
